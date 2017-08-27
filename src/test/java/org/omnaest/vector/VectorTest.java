@@ -54,4 +54,12 @@ public class VectorTest
 		assertEquals(100, distance, 0.001);
 	}
 
+	@Test
+	public void testAbsolute() throws Exception
+	{
+		assertEquals(Math.sqrt(2), new Vector(1, 1).absolute(), 0.001);
+		assertEquals(1, new Vector(1, 0).absolute(), 0.001);
+		assertEquals(1, new Vector(0, 1).absolute(), 0.001);
+	}
+
 }

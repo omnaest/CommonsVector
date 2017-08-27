@@ -23,6 +23,12 @@ import java.util.stream.DoubleStream;
 
 public class Vector
 {
+	/**
+	 * (0,0,0) vector in 3D
+	 *
+	 * @see #as2DVector()
+	 * @see #asVectorWithDimension(int)
+	 */
 	public static final Vector NULL = new Vector(0, 0, 0);
 
 	private double[] coordinates;
@@ -53,17 +59,22 @@ public class Vector
 
 	public double getX()
 	{
-		return this.coordinates[0];
+		return this.getCoordinate(0);
 	}
 
 	public double getY()
 	{
-		return this.coordinates[1];
+		return this.getCoordinate(1);
 	}
 
 	public double getZ()
 	{
-		return this.coordinates[2];
+		return this.getCoordinate(2);
+	}
+
+	public double getCoordinate(int dimension)
+	{
+		return dimension < this.coordinates.length ? this.coordinates[dimension] : 0.0;
 	}
 
 	public double[] getCoordinates()
@@ -185,7 +196,7 @@ public class Vector
 					.multiply(this);
 	}
 
-	private int getDimension()
+	public int getDimension()
 	{
 		return this.coordinates.length;
 	}
@@ -228,16 +239,30 @@ public class Vector
 								.absolute();
 	}
 
+	/**
+	 * @see #asVectorWithDimension(int)
+	 * @return
+	 */
 	public Vector as3DVector()
 	{
 		return this.asVectorWithDimension(3);
 	}
 
+	/**
+	 * @see #asVectorWithDimension(int)
+	 * @return
+	 */
 	public Vector as2DVector()
 	{
 		return this.asVectorWithDimension(2);
 	}
 
+	/**
+	 * @see #as2DVector()
+	 * @see #as3DVector()
+	 * @param targetDimension
+	 * @return
+	 */
 	public Vector asVectorWithDimension(int targetDimension)
 	{
 		final int sourceDimension = this.getDimension();
