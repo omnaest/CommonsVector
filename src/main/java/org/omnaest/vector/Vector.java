@@ -89,32 +89,31 @@ public class Vector
 
 	public Vector subtract(Vector vector)
 	{
-		return this.add(vector.multiply(-1));
+		return this.add(vector.multiply(-1.0));
 	}
 
 	public Vector add(Vector vector)
 	{
-		double[] coordinates = vector.getCoordinates();
-		double[] addedCoordinates = new double[coordinates.length];
-		for (int ii = 0; ii < this.determineCommonDimension(coordinates); ii++)
+		int commonDimension = this.determineCommonDimension(this, vector);
+		double[] addedCoordinates = new double[commonDimension];
+		for (int ii = 0; ii < commonDimension; ii++)
 		{
-			addedCoordinates[ii] = this.coordinates[ii] + coordinates[ii];
+			addedCoordinates[ii] = this.getCoordinate(ii) + vector.getCoordinate(ii);
 		}
 		return new Vector(addedCoordinates);
 	}
 
-	private int determineCommonDimension(double[] coordinates)
+	private int determineCommonDimension(Vector vector1, Vector vector2)
 	{
-		return Math.min(coordinates.length, this.coordinates.length);
+		return Math.max(vector1.getDimension(), vector2.getDimension());
 	}
 
 	public double multiplyScalar(Vector vector)
 	{
-		double[] coordinates = vector.getCoordinates();
 		double retval = 0.0;
-		for (int ii = 0; ii < this.determineCommonDimension(coordinates); ii++)
+		for (int ii = 0; ii < this.determineCommonDimension(this, vector); ii++)
 		{
-			retval += this.coordinates[ii] * coordinates[ii];
+			retval += this.getCoordinate(ii) * vector.getCoordinate(ii);
 		}
 		return retval;
 	}

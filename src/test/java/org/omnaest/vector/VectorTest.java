@@ -62,4 +62,19 @@ public class VectorTest
 		assertEquals(1, new Vector(0, 1).absolute(), 0.001);
 	}
 
+	@Test
+	public void testMultiplyScalar() throws Exception
+	{
+		assertEquals(1 + 9 + 49, new Vector(1, 3, 7, 0).multiplyScalar(new Vector(1, 3, 7)), 0.001);
+	}
+
+	@Test
+	public void testAdd() throws Exception
+	{
+		Vector vector = new Vector(1, 3).add(new Vector(1, 3, 7));
+		assertEquals(2, vector.getX(), 0.001);
+		assertEquals(6, vector.getY(), 0.001);
+		assertEquals(7, vector.getZ(), 0.001);
+	}
+
 }
