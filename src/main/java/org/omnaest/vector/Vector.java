@@ -228,14 +228,32 @@ public class Vector
 	 * @param lineDirection
 	 * @return
 	 */
-	public double distanceToLine(Vector pointOnLine, Vector lineDirection)
+	public double closestDistanceToLine(Vector pointOnLine, Vector lineDirection)
 	{
-		Vector delta = this	.as3DVector()
-							.subtract(pointOnLine.as3DVector());
-		return delta.multiplyCross(lineDirection.as3DVector())
-					.absolute()
-				/ lineDirection	.as3DVector()
-								.absolute();
+		//		Vector delta = this	.as3DVector()
+		//							.subtract(pointOnLine.as3DVector());
+		//		return delta.multiplyCross(lineDirection.as3DVector())
+		//					.absolute()
+		//				/ lineDirection	.as3DVector()
+		//								.absolute();
+		return this	.closestDirectionToLine(pointOnLine, lineDirection)
+					.absolute();
+	}
+
+	/**
+	 * Be aware that this calculation is limited to 2D and 3D Vectors
+	 *
+	 * @param pointOnLine
+	 * @param lineDirection
+	 * @return
+	 */
+	public Vector closestDirectionToLine(Vector pointOnLine, Vector lineDirection)
+	{
+		Vector a = pointOnLine;
+		Vector n = lineDirection.normVector();
+		Vector p = this;
+		Vector delta = a.subtract(p);
+		return delta.subtract(n.multiply(delta.multiplyScalar(n)));
 	}
 
 	/**
@@ -292,15 +310,29 @@ public class Vector
 	public boolean equals(Object obj)
 	{
 		if (this == obj)
+		{
 			return true;
+		}
 		if (obj == null)
+		{
 			return false;
+		}
 		if (this.getClass() != obj.getClass())
+		{
 			return false;
+		}
 		Vector other = (Vector) obj;
 		if (!Arrays.equals(this.coordinates, other.coordinates))
+		{
 			return false;
+		}
 		return true;
+	}
+
+	public double distanceTo(Vector vector)
+	{
+		return this	.subtract(vector)
+					.absolute();
 	}
 
 }

@@ -48,9 +48,9 @@ public class VectorTest
 	}
 
 	@Test
-	public void testDistanceToLine() throws Exception
+	public void testClosestDistanceToLine() throws Exception
 	{
-		double distance = new Vector(0, 100).distanceToLine(new Vector(0, 0), new Vector(1, 0));
+		double distance = new Vector(0, 100).closestDistanceToLine(new Vector(0, 0), new Vector(1, 0));
 		assertEquals(100, distance, 0.001);
 	}
 
@@ -75,6 +75,14 @@ public class VectorTest
 		assertEquals(2, vector.getX(), 0.001);
 		assertEquals(6, vector.getY(), 0.001);
 		assertEquals(7, vector.getZ(), 0.001);
+	}
+
+	@Test
+	public void testClosestDirectionToLine() throws Exception
+	{
+		double distance = new Vector(0, 100).closestDirectionToLine(new Vector(0, 0), new Vector(1, 0))
+											.absolute();
+		assertEquals(100, distance, 0.001);
 	}
 
 }
