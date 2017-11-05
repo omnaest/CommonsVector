@@ -19,8 +19,11 @@
 package org.omnaest.vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @see Vector
@@ -60,9 +63,26 @@ public class Matrix
 		double[] coordinates = new double[dimensionY];
 		for (int ii = 0; ii < dimensionY; ii++)
 		{
-			coordinates[ii] = result.get(0, ii);
+			coordinates[ii] = result.getRaw(0, ii);
 		}
 		return new Vector(coordinates);
+	}
+
+	public Matrix multiply(double scalar)
+	{
+		Matrix matrix = Matrix	.builder()
+								.addRows(this.getRows())
+								.build();
+
+		for (int ii = 1; ii <= this.getRowCount(); ii++)
+		{
+			for (int jj = 1; jj <= this.getColumnCount(); jj++)
+			{
+				matrix.setValue(ii, jj, matrix.getValue(ii, jj) * scalar);
+			}
+		}
+
+		return matrix;
 	}
 
 	public Matrix multiply(Matrix matrixB)
@@ -87,8 +107,8 @@ public class Matrix
 
 				for (int ii = 0; ii < freeDimension; ii++)
 				{
-					double a = this.get(ii, y);
-					double b = matrixB.get(x, ii);
+					double a = this.getRaw(ii, y);
+					double b = matrixB.getRaw(x, ii);
 					sum += a * b;
 				}
 				data2[y][x] = sum;
@@ -98,14 +118,45 @@ public class Matrix
 		return new Matrix(data2);
 	}
 
-	public double get(int x, int y)
+	protected double getRaw(int x, int y)
 	{
 		return this.data[y][x];
 	}
 
+	/**
+	 * Returns the value of the row i and column j.<br>
+	 * <br>
+	 * i = 1,2,3,... and j = 1,2,3,...
+	 * 
+	 * @param i
+	 * @param j
+	 * @return
+	 */
+	public double getValue(int i, int j)
+	{
+		return this.getRaw(j - 1, i - 1);
+	}
+
+	/**
+	 * Returns the dimension as array in form: [columns,rows]
+	 * 
+	 * @see Matrix#getRowCount()
+	 * @see #getColumnCount()
+	 * @return
+	 */
 	public int[] getDimensions()
 	{
 		return new int[] { this.data[0].length, this.data.length };
+	}
+
+	public int getRowCount()
+	{
+		return this.getDimensions()[1];
+	}
+
+	public int getColumnCount()
+	{
+		return this.getDimensions()[0];
 	}
 
 	@Override
@@ -118,7 +169,7 @@ public class Matrix
 		{
 			for (int x = 0; x < dimensions[0]; x++)
 			{
-				double value = this.get(x, y);
+				double value = this.getRaw(x, y);
 				sb.append(String.format(Locale.ENGLISH, "% 6.2f", value) + " ");
 			}
 			sb.append("\n");
@@ -134,7 +185,7 @@ public class Matrix
 		{
 			for (int x = x1; x <= x2; x++)
 			{
-				data2[y - y1][x - x1] = this.get(x, y);
+				data2[y - y1][x - x1] = this.getRaw(x, y);
 			}
 		}
 		return new Matrix(data2);
@@ -150,7 +201,7 @@ public class Matrix
 			{
 				int xMod = x % dimensions[0];
 				int yMod = y % dimensions[1];
-				data2[y - y1][x - x1] = this.get(xMod, yMod);
+				data2[y - y1][x - x1] = this.getRaw(xMod, yMod);
 			}
 		}
 		return new Matrix(data2);
@@ -167,8 +218,8 @@ public class Matrix
 		double retval = 0.0;
 
 		//
-		int dimension = matrix.getDimensions()[0];
-		if (dimension != matrix.getDimensions()[1])
+		int dimension = matrix.getRowCount();
+		if (dimension != matrix.getColumnCount())
 		{
 			throw new IllegalStateException("Matrix must be square");
 		}
@@ -176,7 +227,7 @@ public class Matrix
 		{
 			for (int ii = 0; ii < dimension; ii++)
 			{
-				double factor = matrix.get(0, ii);
+				double factor = matrix.getRaw(0, ii);
 				double determinant = matrix	.getSubMatrixModulo(1, ii + 1, dimension - 1, dimension - 1 + ii)
 											.determinant();
 				retval += factor * determinant;
@@ -184,7 +235,11 @@ public class Matrix
 		}
 		else if (dimension == 2)
 		{
-			retval = matrix.get(0, 0) * matrix.get(1, 1) - matrix.get(1, 0) * matrix.get(0, 1);
+			retval = matrix.getRaw(0, 0) * matrix.getRaw(1, 1) - matrix.getRaw(1, 0) * matrix.getRaw(0, 1);
+		}
+		else if (dimension == 1)
+		{
+			retval = matrix.getRaw(0, 0);
 		}
 		else
 		{
@@ -195,7 +250,7 @@ public class Matrix
 		return retval;
 	}
 
-	protected Matrix invert()
+	protected Matrix transposed()
 	{
 		int[] dimensions = this.getDimensions();
 
@@ -211,15 +266,81 @@ public class Matrix
 		return new Matrix(data);
 	}
 
+	/**
+	 * Removes a row from the {@link Matrix}, starting with i=1,2,3,...
+	 * 
+	 * @param i
+	 * @return
+	 */
+	public Matrix reducedByRow(int i)
+	{
+		Builder builder = Matrix.builder();
+
+		for (int ii = 1; ii <= this.getRowCount(); ii++)
+		{
+			if (ii != i)
+			{
+				builder.addRow(this.getRow(ii));
+			}
+		}
+
+		return builder.build();
+	}
+
+	/**
+	 * Returns the row i as {@link Vector}. i = 1,2,3,...
+	 * 
+	 * @param i
+	 * @return
+	 */
+	private Vector getRow(int i)
+	{
+		return new Vector(Arrays.copyOf(this.data[i - 1], this.data[i - 1].length));
+	}
+
+	/**
+	 * Returns the column j as {@link Vector}. j = 1,2,3,...
+	 * 
+	 * @param j
+	 * @return
+	 */
+	private Vector getColumn(int j)
+	{
+		return this	.transposed()
+					.getRow(j);
+	}
+
+	/**
+	 * Removes a column of the {@link Matrix}, starting with j=1,2,3,...
+	 * 
+	 * @param j
+	 * @return
+	 */
+	public Matrix reducedByColumn(int j)
+	{
+		Builder builder = Matrix.builder();
+
+		for (int jj = 1; jj <= this.getColumnCount(); jj++)
+		{
+			if (jj != j)
+			{
+				builder.addColumn(this.getColumn(jj));
+			}
+		}
+
+		return builder.build();
+	}
+
 	public static interface Builder extends RowBuilder, ColumnBuilder
 	{
+
 	}
 
 	public static interface ColumnBuilder
 	{
 		ColumnBuilder addColumn(Vector vector);
 
-		ColumnBuilder addColumn(double[] values);
+		ColumnBuilder addColumn(double... values);
 
 		Matrix build();
 	}
@@ -228,7 +349,9 @@ public class Matrix
 	{
 		RowBuilder addRow(Vector vector);
 
-		RowBuilder addRow(double[] values);
+		RowBuilder addRow(double... values);
+
+		RowBuilder addRows(Vector[] rows);
 
 		Matrix build();
 	}
@@ -247,7 +370,7 @@ public class Matrix
 
 				if (!this.columns.isEmpty())
 				{
-					retval = new Matrix(this.columns.toArray(new double[0][0])).invert();
+					retval = new Matrix(this.columns.toArray(new double[0][0])).transposed();
 				}
 				else if (!this.rows.isEmpty())
 				{
@@ -258,14 +381,14 @@ public class Matrix
 			}
 
 			@Override
-			public RowBuilder addRow(double[] values)
+			public RowBuilder addRow(double... values)
 			{
 				this.rows.add(values);
 				return this;
 			}
 
 			@Override
-			public ColumnBuilder addColumn(double[] values)
+			public ColumnBuilder addColumn(double... values)
 			{
 				this.columns.add(values);
 				return this;
@@ -282,7 +405,109 @@ public class Matrix
 			{
 				return this.addColumn(vector.getCoordinates());
 			}
+
+			@Override
+			public RowBuilder addRows(Vector[] rows)
+			{
+				Arrays	.asList(rows)
+						.stream()
+						.forEach(row -> this.addRow(row));
+				return this;
+			}
 		};
+	}
+
+	public Matrix reducedByRowAndColumn(int i, int j)
+	{
+		return this	.reducedByRow(i)
+					.reducedByColumn(j);
+	}
+
+	/**
+	 * Returns the adjunct of this {@link Matrix}.
+	 * 
+	 * @see <a href="https://de.wikipedia.org/wiki/Adjunkte">wikipedia</a>
+	 * @return
+	 */
+	public Matrix adjunct()
+	{
+		Matrix retval = Matrix	.builder()
+								.addRows(this.getRows())
+								.build();
+		for (int ii = 1; ii <= this.getRowCount(); ii++)
+		{
+			for (int jj = 1; jj <= this.getColumnCount(); jj++)
+			{
+				double sign = Math.pow(-1, ii + jj);
+				double determinant = this	.reducedByRowAndColumn(ii, jj)
+											.determinant();
+				retval.setValue(ii, jj, sign * determinant);
+			}
+		}
+
+		return retval.transposed();
+	}
+
+	public Matrix inverse()
+	{
+		return this	.adjunct()
+					.multiply(1.0 / this.determinant());
+	}
+
+	/**
+	 * Sets the given value at row i and column j.<br>
+	 * <br>
+	 * i = 1,2,3,... and j = 1,2,3,...
+	 * 
+	 * @param i
+	 * @param j
+	 * @param value
+	 * @return
+	 */
+	private Matrix setValue(int i, int j, double value)
+	{
+		this.data[i - 1][j - 1] = value;
+		return this;
+	}
+
+	private Vector[] getRows()
+	{
+		List<Vector> rows = IntStream	.range(1, this.getRowCount() + 1)
+										.mapToObj(ii -> this.getRow(ii))
+										.collect(Collectors.toList());
+		return rows.toArray(new Vector[rows.size()]);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.deepHashCode(this.data);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+		{
+			return true;
+		}
+		if (obj == null)
+		{
+			return false;
+		}
+		if (this.getClass() != obj.getClass())
+		{
+			return false;
+		}
+		Matrix other = (Matrix) obj;
+		if (!Arrays.deepEquals(this.data, other.data))
+		{
+			return false;
+		}
+		return true;
 	}
 
 }
