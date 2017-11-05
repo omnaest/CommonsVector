@@ -185,6 +185,15 @@ public class Vector
 		return this.rotate(angle, 0, 0);
 	}
 
+	/**
+	 * An active rotation around the given angles
+	 * 
+	 * @see #rotatePassive(double, double, double)
+	 * @param angleX
+	 * @param angleY
+	 * @param angleZ
+	 * @return
+	 */
 	public Vector rotate(double angleX, double angleY, double angleZ)
 	{
 		int dimension = this.getDimension();
@@ -192,6 +201,25 @@ public class Vector
 					.multiply(this.getRotationMatrixXZ(angleY))
 					.multiply(this.getRotationMatrixYZ(angleX))
 					.getSubMatrix(0, 0, dimension - 1, dimension - 1)
+					.multiply(this);
+	}
+
+	/**
+	 * A passive rotation around the given angles
+	 * 
+	 * @param angleX
+	 * @param angleY
+	 * @param angleZ
+	 * @return
+	 */
+	public Vector rotatePassive(double angleX, double angleY, double angleZ)
+	{
+		int dimension = this.getDimension();
+		return this	.getRotationMatrixXY(angleZ)
+					.multiply(this.getRotationMatrixXZ(angleY))
+					.multiply(this.getRotationMatrixYZ(angleX))
+					.getSubMatrix(0, 0, dimension - 1, dimension - 1)
+					.inverse()
 					.multiply(this);
 	}
 

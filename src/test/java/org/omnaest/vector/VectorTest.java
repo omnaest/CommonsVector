@@ -85,4 +85,17 @@ public class VectorTest
 		assertEquals(100, distance, 0.001);
 	}
 
+	@Test
+	public void testRotatePassive() throws Exception
+	{
+		double angleX = 0;
+		double angleY = -90;
+		double angleZ = 90;
+		Vector rotatedVector = new Vector(0, 100, 0).rotatePassive(angleX, angleY, angleZ);
+		System.out.println(rotatedVector);
+		assertEquals(0, rotatedVector.getX(), 0.001);
+		assertEquals(0, rotatedVector.getY(), 0.001);
+		assertEquals(100, rotatedVector.getZ(), 0.001);
+	}
+
 }
