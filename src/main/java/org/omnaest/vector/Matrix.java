@@ -510,4 +510,58 @@ public class Matrix
 		return true;
 	}
 
+	/**
+	 * Returns a identity matrix in the given dimension.<br>
+	 * <br>
+	 * Example:<br>
+	 * 
+	 * <pre>
+	 * 1 0 0
+	 * 0 1 0
+	 * 0 0 1
+	 * </pre>
+	 * 
+	 * @param dimension
+	 * @return
+	 */
+	public static Matrix identity(int dimension)
+	{
+		Builder builder = Matrix.builder();
+
+		for (int ii = 0; ii < dimension; ii++)
+		{
+			double[] row = new double[dimension];
+			row[ii] = 1.0;
+			builder.addRow(row);
+		}
+
+		return builder.build();
+	}
+
+	/**
+	 * Adds another {@link Matrix}
+	 * 
+	 * @param other
+	 * @return
+	 */
+	public Matrix add(Matrix other)
+	{
+		Matrix retval = Matrix.clone(this);
+		for (int ii = 1; ii <= this.getRowCount(); ii++)
+		{
+			for (int jj = 1; jj <= this.getColumnCount(); jj++)
+			{
+				retval.setValue(ii, jj, this.getValue(ii, jj) + other.getValue(ii, jj));
+			}
+		}
+		return retval;
+	}
+
+	private static Matrix clone(Matrix matrix)
+	{
+		return Matrix	.builder()
+						.addRows(matrix.getRows())
+						.build();
+	}
+
 }

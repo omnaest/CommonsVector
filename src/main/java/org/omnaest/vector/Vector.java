@@ -19,7 +19,10 @@
 package org.omnaest.vector;
 
 import java.util.Arrays;
+import java.util.function.UnaryOperator;
 import java.util.stream.DoubleStream;
+
+import org.omnaest.vector.Matrix.Builder;
 
 public class Vector
 {
@@ -196,12 +199,74 @@ public class Vector
 	 */
 	public Vector rotate(double angleX, double angleY, double angleZ)
 	{
+		boolean extrinsic = false;
+		boolean passive = false;
+		return this.rotate(angleX, angleY, angleZ, extrinsic, passive);
+	}
+
+	public Vector rotate(double angleX, double angleY, double angleZ, boolean extrinsic, boolean passive)
+	{
 		int dimension = this.getDimension();
-		return this	.getRotationMatrixXY(angleZ)
-					.multiply(this.getRotationMatrixXZ(angleY))
-					.multiply(this.getRotationMatrixYZ(angleX))
-					.getSubMatrix(0, 0, dimension - 1, dimension - 1)
-					.multiply(this);
+
+		UnaryOperator<Matrix> singleRotationMatrixModifier = m -> passive ? m.inverse() : m;
+
+		//		List<UnaryOperator<Matrix>> rotations = extrinsic ? Arrays.asList((m) ->
+		//		{
+		//			Vector ex = m	.inverse()
+		//							.multiply(new Vector(1, 0, 0));
+		//			return this.getRotationMatrix(ex, angleX);
+		//		}, (m) ->
+		//		{
+		//			Vector ey = m	.inverse()
+		//							.multiply(new Vector(0, 1, 0));
+		//			return this.getRotationMatrix(ey, angleY);
+		//		}, (m) ->
+		//		{
+		//			Vector ez = m	.inverse()
+		//							.multiply(new Vector(0, 0, 1));
+		//			return this.getRotationMatrix(ez, angleZ);
+		//		})
+		//
+		//				: Arrays.asList((m) -> this.getRotationMatrixZ(angleZ), (m) -> this.getRotationMatrixY(angleY), (m) -> this.getRotationMatrixX(angleX));
+		//
+		//		Collections.reverse(rotations);
+		//
+		//		AtomicReference<Matrix> previous = new AtomicReference<>(Matrix.identity(3));
+		//		Matrix rotationMatrix = rotations	.stream()
+		//											.map(ms -> ms.apply(previous.get()))
+		//											.peek(m -> previous.set(previous.get()
+		//																			.multiply(m)))
+		//											.map(singleRotationMatrixModifier)
+		//											.reduce(Matrix::multiply)
+		//											.get();
+
+		Vector ex = new Vector(1, 0, 0);
+		Matrix rotationMatrixX = this.getRotationMatrix(ex, angleX);
+		Matrix inverseRotationMatrixX = this.getRotationMatrix(ex, -angleX);
+
+		Vector ey = inverseRotationMatrixX.multiply(new Vector(0, 1, 0));
+		Matrix rotationMatrixY = this.getRotationMatrix(ey, angleY);
+		Matrix inverseRotationMatrixY = this.getRotationMatrix(ey, -angleY);
+
+		Vector ez = inverseRotationMatrixX	.multiply(inverseRotationMatrixY)
+											.multiply(new Vector(0, 0, 1));
+		Matrix rotationMatrixZ = this.getRotationMatrix(ez, angleZ);
+		Matrix inverseRotationMatrixZ = this.getRotationMatrix(ez, -angleZ);
+
+		Matrix rotationMatrix = rotationMatrixX	.multiply(rotationMatrixY)
+												.multiply(rotationMatrixZ);
+
+		Matrix reducedRotationMatrix = rotationMatrix.getSubMatrix(0, 0, dimension - 1, dimension - 1);
+		return reducedRotationMatrix.multiply(this);
+
+		//		double r = this.absolute();
+		//		double gamma = Math.atan(Math.sqrt(this.getX() * this.getX() + this.getY() * this.getY()) / this.getZ());
+		//		double teta = Math.atan(this.getY() / this.getX());
+		//
+		//		gamma += angleX;
+		//		teta += angleY;
+		//
+		//		return new Vector(r * Math.sin(gamma) * Math.cos(teta), r * Math.sin(gamma) * Math.sin(teta), r * Math.cos(teta));
 	}
 
 	/**
@@ -214,13 +279,47 @@ public class Vector
 	 */
 	public Vector rotatePassive(double angleX, double angleY, double angleZ)
 	{
-		int dimension = this.getDimension();
-		return this	.getRotationMatrixXY(angleZ)
-					.multiply(this.getRotationMatrixXZ(angleY))
-					.multiply(this.getRotationMatrixYZ(angleX))
-					.getSubMatrix(0, 0, dimension - 1, dimension - 1)
-					.inverse()
-					.multiply(this);
+		boolean passive = false;
+		boolean extrinsic = true;
+		return this.rotate(angleX, angleY, angleZ, extrinsic, passive);
+	}
+
+	/**
+	 * Returns the outer product / tensor product of this and another {@link Vector}
+	 * 
+	 * @see <a href="https://en.wikipedia.org/wiki/Outer_product">wikipedia</a>
+	 * @param other
+	 * @return
+	 */
+	public Matrix outerProduct(Vector other)
+	{
+		Builder builder = Matrix.builder();
+
+		for (int ii = 0; ii < this.getDimension(); ii++)
+		{
+			double[] row = new double[other.getDimension()];
+			for (int jj = 0; jj < other.getDimension(); jj++)
+			{
+				double value = this.getCoordinate(ii);
+				double otherValue = other.getCoordinate(jj);
+				row[jj] = value * otherValue;
+			}
+			builder.addRow(row);
+		}
+
+		return builder.build();
+	}
+
+	public Matrix crossProductMatrix()
+	{
+		double z = this.getZ();
+		double y = this.getY();
+		double x = this.getX();
+		return Matrix	.builder()
+						.addRow(0, -z, y)
+						.addRow(z, 0, -x)
+						.addRow(-y, x, 0)
+						.build();
 	}
 
 	public int getDimension()
@@ -228,25 +327,49 @@ public class Vector
 		return this.coordinates.length;
 	}
 
-	private Matrix getRotationMatrixXY(double angleZ)
+	private Matrix getRotationMatrix(Vector u, double angleU)
 	{
-		double cos = Math.cos(angleZ / 180 * Math.PI);
-		double sin = Math.sin(angleZ / 180 * Math.PI);
-		return new Matrix(new double[][] { new double[] { cos, -sin, 0 }, new double[] { sin, cos, 0 }, new double[] { 0, 0, 1 } });
+		double cos = Math.cos(angleU / 180.0 * Math.PI);
+		double sin = Math.sin(angleU / 180.0 * Math.PI);
+		return Matrix	.identity(3)
+						.multiply(cos)
+						.add(u	.crossProductMatrix()
+								.multiply(sin))
+						.add(u	.multiply(1 - cos)
+								.outerProduct(u));
 	}
 
-	private Matrix getRotationMatrixYZ(double angleX)
+	private Matrix getRotationMatrixX(double angleX)
 	{
-		double cos = Math.cos(angleX / 180 * Math.PI);
-		double sin = Math.sin(angleX / 180 * Math.PI);
-		return new Matrix(new double[][] { new double[] { 1, 0, 0 }, new double[] { 0, cos, sin }, new double[] { 0, -sin, cos } });
+		double cos = Math.cos(angleX / 180.0 * Math.PI);
+		double sin = Math.sin(angleX / 180.0 * Math.PI);
+		return Matrix	.builder()
+						.addRow(1, 0, 0)
+						.addRow(0, cos, -sin)
+						.addRow(0, sin, cos)
+						.build();
 	}
 
-	private Matrix getRotationMatrixXZ(double angleY)
+	private Matrix getRotationMatrixY(double angleY)
 	{
 		double cos = Math.cos(angleY / 180 * Math.PI);
 		double sin = Math.sin(angleY / 180 * Math.PI);
-		return new Matrix(new double[][] { new double[] { cos, 0, -sin }, new double[] { 0, 1, 0 }, new double[] { sin, 0, cos } });
+		return Matrix	.builder()
+						.addRow(cos, 0, sin)
+						.addRow(0, 1, 0)
+						.addRow(-sin, 0, cos)
+						.build();
+	}
+
+	private Matrix getRotationMatrixZ(double angleZ)
+	{
+		double cos = Math.cos(angleZ / 180 * Math.PI);
+		double sin = Math.sin(angleZ / 180 * Math.PI);
+		return Matrix	.builder()
+						.addRow(cos, -sin, 0)
+						.addRow(sin, cos, 0)
+						.addRow(0, 0, 1)
+						.build();
 	}
 
 	/**
@@ -322,7 +445,7 @@ public class Vector
 	@Override
 	public String toString()
 	{
-		return "[coordinates=" + Arrays.toString(this.coordinates) + "]";
+		return Arrays.toString(this.coordinates);
 	}
 
 	@Override
@@ -361,6 +484,25 @@ public class Vector
 	{
 		return this	.subtract(vector)
 					.absolute();
+	}
+
+	public boolean equals(Vector other, double delta)
+	{
+		boolean retval = true;
+
+		if (this.getDimension() != other.getDimension())
+		{
+			retval = false;
+		}
+		else
+		{
+			for (int ii = 0; ii < this.getDimension(); ii++)
+			{
+				retval &= Math.abs(this.getCoordinate(ii) - other.getCoordinate(ii)) < delta;
+			}
+		}
+
+		return retval;
 	}
 
 }

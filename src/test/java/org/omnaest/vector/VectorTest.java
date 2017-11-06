@@ -19,6 +19,8 @@
 package org.omnaest.vector;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -27,15 +29,53 @@ public class VectorTest
 	@Test
 	public void testRotate() throws Exception
 	{
-		assertEquals(	1.0, new Vector(1, 0, 0).rotateZ(90)
-												.getY(),
-						0.0001);
-		assertEquals(	1.0, new Vector(1, 0, 0).rotateY(90)
-												.getZ(),
-						0.0001);
-		assertEquals(	1.0, new Vector(0, 0, 1).rotateX(90)
-												.getY(),
-						0.0001);
+		{
+			Vector rotatedAroundZ = new Vector(1, 0, 0).rotateZ(90);
+			assertTrue(new Vector(0, 1, 0).equals(rotatedAroundZ, 001));
+		}
+		{
+			Vector rotatedAroundZ = new Vector(1, 0, 0).rotateY(90);
+			assertTrue(new Vector(0, 0, -1).equals(rotatedAroundZ, 001));
+		}
+		{
+			Vector rotatedAroundZ = new Vector(0, 1, 0).rotateX(90);
+			assertTrue(new Vector(0, 0, 1).equals(rotatedAroundZ, 001));
+		}
+
+		{
+			Vector rotatedAroundZandX = new Vector(1, 0, 0)	.rotateZ(90)
+															.rotateX(90);
+			assertTrue(new Vector(0, 0, 1).equals(rotatedAroundZandX, 001));
+		}
+	}
+
+	@Test
+	public void testRotatePassive() throws Exception
+	{
+		//System.out.println(rotatedVector);
+		//		{
+		//			Vector rotated = new Vector(0, 1, 0).rotatePassive(90, 0, 0);
+		//			System.out.println(rotated);
+		//			assertTrue(new Vector(0, 0, 1).equals(rotated, 0.001));
+		//		}
+		{
+			Vector rotated = new Vector(0, 1, 0).rotatePassive(90, 90, 0);
+			System.out.println(rotated);
+			assertTrue(new Vector(1, 0, 0).equals(rotated, 0.001));
+		}
+		//		{
+		//			Vector rotated = new Vector(0, 0, 1).rotatePassive(90, 0, 90);
+		//			System.out.println(rotated);
+		//			assertTrue(new Vector(1, 0, 0).equals(rotated, 0.001));
+		//		}
+
+		//		for (int angleX = 0; angleX <= 90; angleX++)
+		//		{
+		//			Vector rotated = new Vector(0, 0, 1).rotatePassive(angleX, 0, 0);
+		//			System.out.println(rotated);
+		//			//assertTrue(new Vector(1, 0, 0).equals(rotated, 0.001));
+		//		}
+
 	}
 
 	@Test
@@ -86,16 +126,24 @@ public class VectorTest
 	}
 
 	@Test
-	public void testRotatePassive() throws Exception
+	public void testEqualsVectorDouble() throws Exception
 	{
-		double angleX = 0;
-		double angleY = -90;
-		double angleZ = 90;
-		Vector rotatedVector = new Vector(0, 100, 0).rotatePassive(angleX, angleY, angleZ);
-		System.out.println(rotatedVector);
-		assertEquals(0, rotatedVector.getX(), 0.001);
-		assertEquals(0, rotatedVector.getY(), 0.001);
-		assertEquals(100, rotatedVector.getZ(), 0.001);
+		assertTrue(new Vector(1, 0, 1).equals(new Vector(1.01, 0, 1.01), 0.1));
+		assertFalse(new Vector(1, 0, 1).equals(new Vector(1.01, 0, 1.01), 0.0001));
+	}
+
+	@Test
+	public void testOuterProduct() throws Exception
+	{
+		Matrix outerProduct = new Vector(1, 2, 3, 4).outerProduct(new Vector(2, 3, 5));
+		//System.out.println(outerProduct);
+		assertEquals(	Matrix.builder()
+							.addRow(2.00, 3.00, 5.00)
+							.addRow(4.00, 6.00, 10.00)
+							.addRow(6.00, 9.00, 15.00)
+							.addRow(8.00, 12.00, 20.00)
+							.build(),
+						outerProduct);
 	}
 
 }

@@ -128,4 +128,33 @@ public class MatrixTest
 		}
 	}
 
+	@Test
+	public void testIdentity() throws Exception
+	{
+		assertEquals(	Matrix.builder()
+							.addRow(1, 0, 0)
+							.addRow(0, 1, 0)
+							.addRow(0, 0, 1)
+							.build(),
+						Matrix.identity(3));
+	}
+
+	@Test
+	public void testAdd() throws Exception
+	{
+		Matrix matrix = Matrix	.builder()
+								.addRow(1, 2)
+								.addRow(3, 4)
+								.build()
+								.add(Matrix	.builder()
+											.addRow(1, 2)
+											.addRow(3, 4)
+											.build());
+		assertEquals(	Matrix.builder()
+							.addRow(1 * 2, 2 * 2)
+							.addRow(3 * 2, 4 * 2)
+							.build(),
+						matrix);
+	}
+
 }
