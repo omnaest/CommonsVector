@@ -146,4 +146,13 @@ public class VectorTest
 						outerProduct);
 	}
 
+	@Test
+	public void testDetermineAngleToXAxis() throws Exception
+	{
+		assertEquals(46.3, new Vector(1, 2, 3).determineAngle(new Vector(-7, 8, 9)), 0.01);
+		assertEquals(90.0, Vector.E_Y.determineAngleToXAxis(), 0.01);
+		assertEquals(0.0, Vector.E_X.determineAngleToXAxis(), 0.01);
+		assertEquals(90.0, Vector.E_Z.determineAngleToXAxis(), 0.01);
+	}
+
 }

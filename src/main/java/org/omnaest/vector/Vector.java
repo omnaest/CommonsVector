@@ -32,7 +32,10 @@ public class Vector
 	 * @see #as2DVector()
 	 * @see #asVectorWithDimension(int)
 	 */
-	public static final Vector NULL = new Vector(0, 0, 0);
+	public static final Vector	NULL	= new Vector(0, 0, 0);
+	public static final Vector	E_X		= new Vector(1, 0, 0);
+	public static final Vector	E_Y		= new Vector(0, 1, 0);;
+	public static final Vector	E_Z		= new Vector(0, 0, 1);
 
 	private double[] coordinates;
 
@@ -503,6 +506,39 @@ public class Vector
 		}
 
 		return retval;
+	}
+
+	public static double translatePIToDegree(double angleInPi)
+	{
+		double retval = 180.0 * angleInPi / Math.PI;
+		while (retval >= 360)
+		{
+			retval -= 360;
+		}
+		return retval;
+	}
+
+	public static double translateDegreeToPi(double angleInDegree)
+	{
+		double retval = Math.PI * angleInDegree / 180.0;
+		while (retval >= Math.PI * 2)
+		{
+			retval -= Math.PI * 2;
+		}
+		return retval;
+	}
+
+	public double determineAngle(Vector other)
+	{
+		double cosValue = this	.normVector()
+								.multiplyScalar(other.normVector());
+		double acos = Math.acos(cosValue);
+		return translatePIToDegree(acos);
+	}
+
+	public double determineAngleToXAxis()
+	{
+		return this.determineAngle(Vector.E_X);
 	}
 
 }
