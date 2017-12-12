@@ -37,7 +37,7 @@ public class Vector
 	public static final Vector	E_Y		= new Vector(0, 1, 0);;
 	public static final Vector	E_Z		= new Vector(0, 0, 1);
 
-	private double[] coordinates;
+	protected double[] coordinates;
 
 	public Vector(double x, double y)
 	{
@@ -66,6 +66,27 @@ public class Vector
 	public double getX()
 	{
 		return this.getCoordinate(0);
+	}
+
+	protected Vector setX(double x)
+	{
+		return this.setCoordinate(0, x);
+	}
+
+	protected Vector setY(double y)
+	{
+		return this.setCoordinate(1, y);
+	}
+
+	protected Vector setZ(double z)
+	{
+		return this.setCoordinate(2, z);
+	}
+
+	protected Vector setCoordinate(int index, double value)
+	{
+		this.coordinates[index] = value;
+		return this;
 	}
 
 	public double getY()
@@ -541,4 +562,8 @@ public class Vector
 		return this.determineAngle(Vector.E_X);
 	}
 
+	public static Vector of(double... coordinates)
+	{
+		return new Vector(coordinates);
+	}
 }
