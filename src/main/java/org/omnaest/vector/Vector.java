@@ -562,8 +562,24 @@ public class Vector
 		return this.determineAngle(Vector.E_X);
 	}
 
+	/**
+	 * Returns a new {@link Vector} with the given coordinates x,y,z,...
+	 * 
+	 * @param coordinates
+	 * @return
+	 */
 	public static Vector of(double... coordinates)
 	{
 		return new Vector(coordinates);
+	}
+
+	/**
+	 * Returns the {@link Vector} of the inverse direction
+	 * 
+	 * @return
+	 */
+	public Vector inverse()
+	{
+		return this.multiply(-1);
 	}
 }
