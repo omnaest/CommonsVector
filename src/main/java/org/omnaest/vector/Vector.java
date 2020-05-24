@@ -22,8 +22,6 @@ import java.util.Arrays;
 import java.util.function.UnaryOperator;
 import java.util.stream.DoubleStream;
 
-import org.omnaest.vector.Matrix.Builder;
-
 public class Vector
 {
     /**
@@ -68,6 +66,39 @@ public class Vector
         return this.getCoordinate(0);
     }
 
+    public static class NumberValue
+    {
+        private double value;
+
+        public NumberValue(double value)
+        {
+            super();
+            this.value = value;
+        }
+
+        public int integerValue()
+        {
+            return (int) this.longValue();
+        }
+
+        public long longValue()
+        {
+            return Math.round(this.value);
+        }
+
+        @Override
+        public String toString()
+        {
+            return "NumberValue [value=" + this.value + "]";
+        }
+
+    }
+
+    public NumberValue getXAs()
+    {
+        return new NumberValue(this.getX());
+    }
+
     public Vector setX(double x)
     {
         return this.setCoordinate(0, x);
@@ -95,9 +126,19 @@ public class Vector
         return this.getCoordinate(1);
     }
 
+    public NumberValue getYAs()
+    {
+        return new NumberValue(this.getY());
+    }
+
     public double getZ()
     {
         return this.getCoordinate(2);
+    }
+
+    public NumberValue getZAs()
+    {
+        return new NumberValue(this.getZ());
     }
 
     public double getCoordinate(int dimension)
@@ -318,7 +359,7 @@ public class Vector
      */
     public Matrix outerProduct(Vector other)
     {
-        Builder builder = Matrix.builder();
+        Matrix.Builder builder = Matrix.builder();
 
         for (int ii = 0; ii < this.getDimension(); ii++)
         {
@@ -587,5 +628,138 @@ public class Vector
     public PolarVector asPolarVector()
     {
         return new PolarVector(this);
+    }
+
+    public static interface VectorBuilder
+    {
+
+        Vector build();
+
+        CartesianVectorBuilder setZ(double z);
+
+        CartesianVectorBuilder setY(double y);
+
+        CartesianVectorBuilder setX(double x);
+
+        PolarVectorBuilder setPhiAngleInDegree(double phi);
+
+        PolarVectorBuilder setPhiAngle(double phi);
+
+        PolarVectorBuilder setRadius(double radius);
+
+        VectorBuilder withDimensions(int numberOfDimensions);
+
+    }
+
+    public static interface PolarVectorBuilder
+    {
+
+        PolarVectorBuilder setPhiAngleInDegree(double phi);
+
+        PolarVectorBuilder setPhiAngle(double phi);
+
+        PolarVectorBuilder setRadius(double radius);
+
+        Vector build();
+
+    }
+
+    public static interface CartesianVectorBuilder
+    {
+
+        CartesianVectorBuilder setZ(double z);
+
+        CartesianVectorBuilder setY(double y);
+
+        CartesianVectorBuilder setX(double x);
+
+        Vector build();
+
+    }
+
+    public static class VectorBuilderImpl implements VectorBuilder, PolarVectorBuilder, CartesianVectorBuilder
+    {
+        private Vector vector = new Vector(0, 0);
+
+        @Override
+        public VectorBuilder withDimensions(int numberOfDimensions)
+        {
+            this.vector = new Vector(new double[numberOfDimensions]);
+            return this;
+        }
+
+        @Override
+        public PolarVectorBuilder setRadius(double radius)
+        {
+            boolean isZeroVector = this.vector.isZeroVector();
+            if (isZeroVector)
+            {
+                this.vector = this.vector.setX(1.0);
+            }
+            this.vector = this.vector.asPolarVector()
+                                     .setRadius(radius)
+                                     .asCartesianVector();
+            return this;
+        }
+
+        @Override
+        public PolarVectorBuilder setPhiAngle(double phi)
+        {
+            this.vector.asPolarVector()
+                       .addPhi(phi);
+            return this;
+        }
+
+        @Override
+        public PolarVectorBuilder setPhiAngleInDegree(double phi)
+        {
+            this.vector = this.vector.asPolarVector()
+                                     .addPhiInDegree(phi)
+                                     .asCartesianVector();
+            return this;
+        }
+
+        @Override
+        public CartesianVectorBuilder setX(double x)
+        {
+            this.vector = this.vector.setX(x);
+            return this;
+        }
+
+        @Override
+        public CartesianVectorBuilder setY(double y)
+        {
+            this.vector.setY(y);
+            return this;
+        }
+
+        @Override
+        public CartesianVectorBuilder setZ(double z)
+        {
+            this.vector.setZ(z);
+            return this;
+        }
+
+        @Override
+        public Vector build()
+        {
+            return this.vector;
+        }
+    }
+
+    public static VectorBuilder builder()
+    {
+        return new VectorBuilderImpl();
+    }
+
+    public boolean isZeroVector()
+    {
+        return this.isZeroVector(0.000001);
+    }
+
+    public boolean isZeroVector(double precision)
+    {
+        return this.distanceTo(Vector.NULL) <= precision;
+
     }
 }

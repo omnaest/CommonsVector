@@ -17,6 +17,13 @@ public class PolarVector
                                     .sum());
     }
 
+    public PolarVector setRadius(double radius)
+    {
+        return this.vector.normVector()
+                          .multiply(radius)
+                          .asPolarVector();
+    }
+
     public double getTheta()
     {
         return Math.acos(this.vector.getZ() / this.getRadius());
